@@ -14,6 +14,14 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +40,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getTasks, deleteTask } from "@/lib/api";
+import { getTasks, deleteTask, updateTask } from "@/lib/api";
 import { toast } from "sonner";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { useState } from "react";
 
 type Task = {
   id: string;
@@ -47,6 +67,8 @@ type Task = {
 export default function TasksTable() {
   const [data, setData] = React.useState<Task[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -56,17 +78,17 @@ export default function TasksTable() {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const fetchTasks = async () => {
+    try {
+      const tasks = await getTasks();
+      setData(tasks.data);
+    } catch (error) {
+      console.error("Failed to fetch tasks", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   React.useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const tasks = await getTasks();
-        setData(tasks.data);
-      } catch (error) {
-        console.error("Failed to fetch tasks", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTasks();
   }, []);
 
@@ -144,7 +166,15 @@ export default function TasksTable() {
                 Copy Task ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditingTask(task);
+                  setEditOpen(true);
+                }}
+              >
+                Edit
+              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={() => handleDelete(task.id)}>
                 Delete
               </DropdownMenuItem>
@@ -230,6 +260,24 @@ export default function TasksTable() {
             )}
           </TableBody>
         </Table>
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+              <DialogDescription>Update the task details</DialogDescription>
+            </DialogHeader>
+
+            {editingTask && (
+              <EditTaskForm
+                task={editingTask}
+                onSuccess={() => {
+                  setEditOpen(false);
+                  fetchTasks();
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="space-x-2">
@@ -252,5 +300,102 @@ export default function TasksTable() {
         </div>
       </div>
     </div>
+  );
+}
+
+function EditTaskForm({
+  task,
+  onSuccess,
+}: {
+  task: Task;
+  onSuccess: () => void;
+}) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description);
+  const [status, setStatus] = useState(task.status);
+  const [dueDate, setDueDate] = useState(task.dueDate);
+  const [priority, setPriority] = useState(task.priority);
+
+  const handleUpdate = async () => {
+    try {
+      await updateTask(task.id, {
+        title,
+        description,
+        status,
+        dueDate,
+        priority,
+      });
+
+      toast("Task Updated!");
+
+      onSuccess(); // Refetch tasks
+    } catch (err) {
+      console.error("Failed to update task", err);
+    }
+  };
+
+  return (
+    <form className="grid grid-cols-3 gap-4">
+      <div className="col-span-3 space-y-2">
+        <Label>Title</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div className="col-span-3 space-y-2">
+        <Label>Description</Label>
+        <Input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="col-span-1 space-y-2">
+        <Label>Status</Label>
+        <Select
+          value={status}
+          onValueChange={(value) => setStatus(value as Task["status"])}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todo">Todo</SelectItem>
+            <SelectItem value="in progress">In Progress</SelectItem>
+            <SelectItem value="done">Done</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="col-span-1 space-y-2">
+        <Label>Priority</Label>
+        <Select
+          value={priority}
+          onValueChange={(value) => setPriority(value as Task["priority"])}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="col-span-1 space-y-2">
+        <Label>Due Date</Label>
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+        />
+      </div>
+      <div className="col-span-2 mt-2">
+        <button
+          type="button"
+          onClick={handleUpdate}
+          className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+        >
+          Update Task
+        </button>
+      </div>
+    </form>
   );
 }

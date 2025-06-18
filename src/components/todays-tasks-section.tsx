@@ -33,7 +33,8 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { useEffect, useState } from "react";
-import { getTasks } from "@/lib/api";
+import { getTasks, updateTask } from "@/lib/api";
+import { toast } from "sonner";
 
 type Task = {
   id: string;
@@ -128,43 +129,13 @@ export function SectionCards() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Want to edit your task?</DialogTitle>
+                    <DialogTitle>Edit Task</DialogTitle>
                     <DialogDescription>
-                      You can update your task title and description
+                      You can update the task details
                     </DialogDescription>
                   </DialogHeader>
-                  <div>
-                    <form className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2 col-span-2">
-                        <Label>Task Title</Label>
-                        <Input type="text" value={task.title} />
-                      </div>
-                      <div className="space-y-2 col-span-2">
-                        <Label>Task Description</Label>
-                        <Input type="text" value={task.description} />
-                      </div>
-                      <div className="col-span-1 space-y-2">
-                        <Label>Task Status</Label>
-                        <Select>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Todo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Todo">Todo</SelectItem>
-                            <SelectItem value="In Progress">
-                              In Progress
-                            </SelectItem>
-                            <SelectItem value="Done">Done</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
 
-                      <div className="space-y-2 col-span-1">
-                        <Label>Due Date</Label>
-                        <Input type="date" value={task.dueDate} />
-                      </div>
-                    </form>
-                  </div>
+                  <EditTaskForm task={task} onSuccess={fetchTasks} />
                 </DialogContent>
               </Dialog>
             </div>
@@ -172,5 +143,102 @@ export function SectionCards() {
         </Card>
       ))}
     </div>
+  );
+}
+
+function EditTaskForm({
+  task,
+  onSuccess,
+}: {
+  task: Task;
+  onSuccess: () => void;
+}) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description);
+  const [status, setStatus] = useState(task.status);
+  const [dueDate, setDueDate] = useState(task.dueDate);
+  const [priority, setPriority] = useState(task.priority);
+
+  const handleUpdate = async () => {
+    try {
+      await updateTask(task.id, {
+        title,
+        description,
+        status,
+        dueDate,
+        priority,
+      });
+
+      toast("Task Updated!");
+
+      onSuccess(); // Refetch tasks
+    } catch (err) {
+      console.error("Failed to update task", err);
+    }
+  };
+
+  return (
+    <form className="grid grid-cols-3 gap-4">
+      <div className="col-span-3 space-y-2">
+        <Label>Title</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div className="col-span-3 space-y-2">
+        <Label>Description</Label>
+        <Input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="col-span-1 space-y-2">
+        <Label>Status</Label>
+        <Select
+          value={status}
+          onValueChange={(value) => setStatus(value as Task["status"])}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todo">Todo</SelectItem>
+            <SelectItem value="in progress">In Progress</SelectItem>
+            <SelectItem value="done">Done</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="col-span-1 space-y-2">
+        <Label>Priority</Label>
+        <Select
+          value={priority}
+          onValueChange={(value) => setPriority(value as Task["priority"])}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="col-span-1 space-y-2">
+        <Label>Due Date</Label>
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+        />
+      </div>
+      <div className="col-span-2 mt-2">
+        <button
+          type="button"
+          onClick={handleUpdate}
+          className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+        >
+          Update Task
+        </button>
+      </div>
+    </form>
   );
 }
