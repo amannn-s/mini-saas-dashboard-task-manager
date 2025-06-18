@@ -106,6 +106,8 @@ export default function TasksTable() {
     {
       accessorKey: "title",
       header: "Title",
+      enableSorting: true,
+      enableColumnFilter: true,
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("title") as string}</div>
       ),
@@ -113,6 +115,8 @@ export default function TasksTable() {
     {
       accessorKey: "status",
       header: "Status",
+      enableSorting: true,
+      enableColumnFilter: true,
       cell: ({ row }) => (
         <div className="capitalize">{row.getValue("status") as string}</div>
       ),
@@ -120,6 +124,8 @@ export default function TasksTable() {
     {
       accessorKey: "priority",
       header: "Priority",
+      enableSorting: true,
+      enableColumnFilter: true,
       cell: ({ row }) => {
         const value = row.getValue("priority") as Task["priority"];
         return (
@@ -140,6 +146,7 @@ export default function TasksTable() {
     {
       accessorKey: "dueDate",
       header: "Due Date",
+      enableSorting: true,
       cell: ({ row }) => {
         const value = row.getValue("dueDate") as string;
         return <span>{new Date(value).toLocaleDateString()}</span>;
@@ -210,6 +217,39 @@ export default function TasksTable() {
   return (
     <div className="w-full px-4 lg:px-6">
       <div className="rounded-md border">
+        <div className="flex items-center gap-4 p-4">
+          <Input
+            placeholder="Filter by title..."
+            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("title")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+
+          <Select
+            value={
+              (table.getColumn("status")?.getFilterValue() as string) ?? ""
+            }
+            onValueChange={(value) => {
+              if (value === "all") {
+                table.getColumn("status")?.setFilterValue(undefined);
+              } else {
+                table.getColumn("status")?.setFilterValue(value);
+              }
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="todo">Todo</SelectItem>
+              <SelectItem value="in progress">In Progress</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
