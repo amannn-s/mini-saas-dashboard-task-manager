@@ -7,6 +7,15 @@ import { useEffect, useState } from "react";
 import { getTasks } from "./lib/api";
 import { Toaster } from "@/components/ui/sonner";
 
+type Task = {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  priority: "low" | "medium" | "high";
+  status: "todo" | "in progress" | "done";
+};
+
 export default function Page() {
   const data = {
     user: {
@@ -17,7 +26,7 @@ export default function Page() {
     },
   };
 
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<Task[] | []>([]);
 
   const fetchTasks = async () => {
     const res = await getTasks();

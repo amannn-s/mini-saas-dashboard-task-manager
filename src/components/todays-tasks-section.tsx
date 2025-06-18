@@ -1,6 +1,5 @@
 import {
   IconCalendar,
-  IconCheck,
   IconClipboardText,
   IconPencil,
 } from "@tabler/icons-react";

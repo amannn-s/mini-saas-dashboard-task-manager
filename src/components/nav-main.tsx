@@ -45,8 +45,8 @@ export function NavMain({
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("todo");
-  const [priority, setPriority] = useState("low");
+  const [status, setStatus] = useState<"todo" | "in progress" | "done">("todo");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
   const [dueDate, setDueDate] = useState("");
 
   const handleCreateTask = async () => {
@@ -57,7 +57,7 @@ export function NavMain({
       description,
       status,
       dueDate,
-      priority, // you can also add a priority select
+      priority,
     };
 
     try {
@@ -106,7 +106,9 @@ export function NavMain({
                       <Label>Task Priority</Label>
                       <Select
                         value={priority}
-                        onValueChange={(value) => setPriority(value)}
+                        onValueChange={(value: "low" | "medium" | "high") =>
+                          setPriority(value)
+                        }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Priority" />
@@ -131,7 +133,9 @@ export function NavMain({
                       <Label>Task Status</Label>
                       <Select
                         value={status}
-                        onValueChange={(value) => setStatus(value)}
+                        onValueChange={(
+                          value: "todo" | "in progress" | "done"
+                        ) => setStatus(value)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Todo" />
