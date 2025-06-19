@@ -19,5 +19,11 @@ export const logout = () => {
 };
 
 export const isAuthenticated = () => {
-  return Boolean(localStorage.getItem("token"));
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    return true;
+  } else {
+    return false;
+  }
 };

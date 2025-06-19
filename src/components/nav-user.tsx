@@ -24,6 +24,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useEffect } from "react";
+import { isAuthenticated } from "@/lib/authService";
+import { useNavigate } from "react-router-dom";
 
 export function NavUser({
   user,
@@ -34,7 +37,19 @@ export function NavUser({
     avatar: string;
   };
 }) {
+  const navigate = useNavigate();
+
   const { isMobile } = useSidebar();
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate("/login");
+    }
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   return (
     <SidebarMenu>
@@ -102,7 +117,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

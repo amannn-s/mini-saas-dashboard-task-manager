@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { login } from "../lib/authService";
@@ -16,7 +15,7 @@ export default function Login() {
     try {
       await login(email, password);
       toast("Logged In Successfully!");
-      return navigate("/", { replace: true });
+      navigate("/", { replace: true });
     } catch {
       setError("Login failed");
     }
